@@ -14,12 +14,7 @@ local function sendChatMessage(message)
     local chatChannel = chatService.TextChannels:FindFirstChild("RBXGeneral")
     
     if chatChannel then
-        local success, err = pcall(function()
-            chatChannel:SendAsync(message)
-        end)
-        if not success then
-            warn("Erro ao enviar mensagem: " .. err)
-        end
+        chatChannel:SendAsync(message)
     else
         warn("Não foi possível encontrar o canal de chat.")
     end
@@ -36,30 +31,110 @@ local function createButton(name, text, size, position, color, textColor, parent
     button.TextColor3 = textColor
     button.Parent = parent
     button.AutoButtonColor = false  -- Desativa a mudança de cor automática ao clicar
-    button.Active = false  -- Desativa a interação com o botão
     return button
 end
 
--- Criar o botão "SPAM M" (movido para cima)
+-- Criar o botão "SPAM M" (na posição desejada)
 local spamButton = createButton("SpamButton", "SPAM M", UDim2.new(0, 80, 0, 40), UDim2.new(0.8, -80, 0.1, -20), Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 0, 0), screenGui)
 
--- Criar o botão "SPAM R" (movido um pouco mais para cima)
-local renderButton = createButton("RenderButton", "SPAM R", UDim2.new(0, 80, 0, 40), UDim2.new(0.8, -80, 0.25, -20), Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 0, 0), screenGui)
-
--- Criar o botão "ESCONDER" (movido mais para baixo)
-local hideButton = createButton("HideButton", "ESCONDER", UDim2.new(0, 60, 0, 30), UDim2.new(0.7, -70, 1, -160), Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 0, 0), screenGui)
+-- Criar o botão "SPAM R" (agora exatamente abaixo do SPAM M)
+local renderButton = createButton("RenderButton", "SPAM R", UDim2.new(0, 80, 0, 40), UDim2.new(0.8, -80, 0.15, 0), Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 0, 0), screenGui)
 
 -- Função para exibir aviso com imagem
 local function showAlert()
     StarterGui:SetCore("SendNotification", {
-        Title = "C.V XIT INJECTED 💉",
-        Text = "C.V XIT BY Wesleygzts",
-        Duration = 5,
+        Title = "wXIT INJECTED",
+        Text = "wXIT BY Wesleygzts",
+        Duration = 10,
         Icon = "rbxassetid://76766404101147"  -- ID da sua imagem
     })
 end
 
--- Os botões não serão arrastáveis, então não precisamos da função makeButtonDraggable.
+-- Tornar os botões arrastáveis
+local function makeButtonDraggable(button)
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+
+    button.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = button.Position
+        end
+    end)
+
+    button.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            button.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- Tornar o botão "X" arrastável
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Size = UDim2.new(0, 30, 0, 30)  -- Tamanho do botão menor
+toggleButton.Position = UDim2.new(0.1, 0, 0.1, 0)  -- Posição inicial
+toggleButton.Text = "X"  -- Texto "X" no botão
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Cor de fundo preta
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- Cor do texto
+toggleButton.Parent = screenGui
+
+-- Fazer o botão circular (usar UICorner)
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)  -- Definir raio como 1 para torná-lo completamente circular
+corner.Parent = toggleButton
+
+-- Função para arrastar o botão circular
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+toggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = toggleButton.Position
+    end
+end)
+
+toggleButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        toggleButton.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Função para alternar a visibilidade dos outros botões
+local areButtonsVisible = true
+local function toggleButtonsVisibility()
+    areButtonsVisible = not areButtonsVisible
+    spamButton.Visible = areButtonsVisible
+    renderButton.Visible = areButtonsVisible
+end
+
+-- Quando o botão circular for clicado, alterna a visibilidade dos botões
+toggleButton.MouseButton1Click:Connect(toggleButtonsVisibility)
 
 -- Quando o botão "SPAM M" é clicado, envia a mensagem "//MAT SEM ERRO 🚩🐻"
 spamButton.MouseButton1Click:Connect(function()
@@ -70,16 +145,6 @@ end)
 renderButton.MouseButton1Click:Connect(function()
     sendChatMessage("//RENDER SEM ERRO 🚩🐻")
 end)
-
--- Função para esconder os botões
-local function hideAllButtons()
-    spamButton.Visible = false
-    hideButton.Visible = false
-    renderButton.Visible = false
-end
-
--- Quando o botão "ESCONDER" é clicado, esconde todos os botões
-hideButton.MouseButton1Click:Connect(hideAllButtons)
 
 -- Exibir o aviso ao executar o script
 showAlert()
